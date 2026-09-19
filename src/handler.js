@@ -3,7 +3,7 @@
  * Compatible with Cloudflare Workers, Deno Deploy, and local Deno/Node.
  */
 
-export const VERSION = "1.1.0";
+export const VERSION = "1.2.1";
 
 export const DEFAULTS = {
   treasury: "0xbAd41cF0f0d5442f9A53630F8081BFd257DA019b",
@@ -99,6 +99,49 @@ export function handleRequest(request, env = {}) {
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, "") || "/";
 
+  // Agent402 / IETF-style discovery (crawlers read this for tool index)
+  if (path === "/.well-known/x402" || path === "/.well-known/x402.json") {
+    const treasury = env.TREASURY || DEFAULTS.treasury;
+    const base = url.origin;
+    const premium = base + "/premium";
+    return json({
+      spec: "agent402-service-manifest/1",
+      version: 1,
+      x402Version: 1,
+      kind: "resource",
+      name: "x402-ping",
+      description:
+        "Base USDC x402-shaped premium ping + free tip/unlock discovery. payTo treasury on Base.",
+      resources: [premium],
+      resourceDetails: [
+        {
+          url: premium,
+          method: "GET",
+          description:
+            "Premium ping — HTTP 402 exact 0.01 USDC on Base (payTo treasury). Tip/unlock fallbacks in 402 extra.",
+        },
+      ],
+      accepts: [
+        {
+          scheme: "exact",
+          network: "eip155:8453",
+          maxAmountRequired: "10000",
+          asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          payTo: treasury,
+          resource: premium,
+          description: "x402-ping premium ping",
+          maxTimeoutSeconds: 60,
+        },
+      ],
+      docs: "https://github.com/filip-study/x402-ping",
+      contact: "palmbeachpete@agentmail.to",
+      tip: env.TIP_URL || DEFAULTS.tip,
+      unlock: env.UNLOCK_URL || DEFAULTS.unlock,
+      treasury,
+      updated: new Date().toISOString(),
+    });
+  }
+
   if (path === "/.well-known/agent.json" || path === "/.well-known/agent-card.json") {
     const treasury = env.TREASURY || DEFAULTS.treasury;
     const base = url.origin;
@@ -166,6 +209,7 @@ export function handleRequest(request, env = {}) {
   if (path === "/premium") {
     // Stub: HTTP 402 with an x402-shaped body. No facilitator wired yet — free tip/unlock still in payload.
     const treasury = env.TREASURY || DEFAULTS.treasury;
+    const resourceUrl = url.origin + "/premium";
     const body = {
       ok: false,
       error: "payment_required",
@@ -173,15 +217,18 @@ export function handleRequest(request, env = {}) {
       accepts: [
         {
           scheme: "exact",
-          network: "base",
+          network: "eip155:8453",
           maxAmountRequired: "10000",
-          resource: "/premium",
-          description: "x402-ping premium (stub — facilitator not wired)",
+          amount: "10000",
+          resource: resourceUrl,
+          description: "x402-ping premium ping (0.01 USDC on Base)",
           mimeType: "application/json",
           payTo: treasury,
           maxTimeoutSeconds: 60,
           asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
           extra: {
+            name: "USDC",
+            version: "2",
             tip: env.TIP_URL || DEFAULTS.tip,
             unlock: env.UNLOCK_URL || DEFAULTS.unlock,
             note: "Until x402 facilitator is attached, tip/unlock above still work.",
@@ -191,7 +238,11 @@ export function handleRequest(request, env = {}) {
     };
     return json(body, 402, {
       "X-Payment-Required": "true",
-      "X-Payment-Network": "base",
+      "X-Payment-Network": "eip155:8453",
+      "x402-price": "0.01",
+      "x402-asset": "USDC",
+      "x402-network": "eip155:8453",
+      "x402-pay-to": treasury,
     });
   }
 
