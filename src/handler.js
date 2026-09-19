@@ -3,7 +3,7 @@
  * Compatible with Cloudflare Workers, Deno Deploy, and local Deno/Node.
  */
 
-export const VERSION = "1.0.0";
+export const VERSION = "1.1.0";
 
 export const DEFAULTS = {
   treasury: "0xbAd41cF0f0d5442f9A53630F8081BFd257DA019b",
@@ -16,7 +16,7 @@ export const DEFAULTS = {
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, X-PAYMENT, Payment-Signature",
     "Access-Control-Expose-Headers": "X-Payment-Required, X-Payment-Network",
   };
@@ -98,6 +98,52 @@ export function handleRequest(request, env = {}) {
 
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, "") || "/";
+
+  if (path === "/.well-known/agent.json" || path === "/.well-known/agent-card.json") {
+    const treasury = env.TREASURY || DEFAULTS.treasury;
+    const base = url.origin;
+    return json({
+      name: "x402-ping",
+      url: base,
+      version: VERSION,
+      description:
+        "Free tip/unlock discovery plus Base USDC x402-shaped /premium paywall stub for agent payment testing. Treasury accepts Base USDC.",
+      defaultInputModes: ["application/json"],
+      defaultOutputModes: ["application/json"],
+      protocols: ["http", "x402"],
+      pricing: {
+        unit: "request",
+        amount: 10000,
+        currency: "USDC",
+        network: "base",
+        note: "/ and /health /ping free; /premium returns HTTP 402 (0.01 USDC stub until facilitator wired)",
+      },
+      availability: { now: true, window_hours: 168, sla: "best-effort" },
+      contact: {
+        http: base + "/",
+        github: "https://github.com/filip-study/x402-ping",
+        tip: env.TIP_URL || DEFAULTS.tip,
+        unlock: env.UNLOCK_URL || DEFAULTS.unlock,
+        treasury,
+      },
+      skills: [
+        {
+          id: "discovery",
+          name: "Free tip/unlock discovery",
+          description: "GET / returns treasury + tip + unlock links (no payment).",
+          examples: ["GET /", "GET /health"],
+        },
+        {
+          id: "premium",
+          name: "Premium ping (x402 stub)",
+          description: "GET /premium returns HTTP 402 with Base USDC payTo treasury.",
+          examples: ["GET /premium"],
+        },
+      ],
+      owner_class: "third-party",
+      brand: "palm-beach-pete",
+    });
+  }
 
   if (path === "/health") {
     return json({ ok: true, service: "x402-ping", version: VERSION, ts: new Date().toISOString() });
