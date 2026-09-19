@@ -3,14 +3,15 @@
  * Compatible with Cloudflare Workers, Deno Deploy, and local Deno/Node.
  */
 
-export const VERSION = "1.3.2";
+export const VERSION = "1.3.3";
 
 export const DEFAULTS = {
   treasury: "0xbAd41cF0f0d5442f9A53630F8081BFd257DA019b",
   tip: "https://shieldz.cash/tip/tip-d2599a4d16a6f4b0",
   unlock: "https://shieldz.cash/unlock/NDS0MgohhA3PmPaBvmD0",
   chain: "base",
-  asset: "USDC",
+  asset: "USDC", // ticker/symbol only — never scrape as EIP-712 domain name
+  assetName: "USD Coin", // EIP-712 domain name (Base USDC)
   network: "eip155:8453",
   usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
   amount: "10000", // 0.01 USDC (6 decimals)
@@ -97,6 +98,8 @@ export function tipUnlockPayload(env = {}) {
     treasury,
     chain: DEFAULTS.chain,
     asset: DEFAULTS.asset,
+    assetName: DEFAULTS.assetName,
+    symbol: DEFAULTS.asset,
     network: DEFAULTS.network,
     tip,
     unlock,
@@ -121,6 +124,7 @@ export function tipUnlockPayload(env = {}) {
             payTo: treasury,
             resource: "/premium",
             description: "x402-ping premium ping",
+            extra: { name: "USD Coin", version: "2" },
           },
         ],
       },
@@ -170,7 +174,9 @@ export function handleRequest(request, env = {}) {
           description:
             "Premium ping — HTTP 402 exact 0.01 USDC on Base (payTo treasury). PAYMENT-REQUIRED header carries live terms.",
           price: 0.01,
-          currency: "USDC",
+          currency: "USD Coin",
+          symbol: "USDC",
+          assetName: "USD Coin",
           network: DEFAULTS.network,
           payTo: treasury,
         },
@@ -183,6 +189,8 @@ export function handleRequest(request, env = {}) {
           description:
             "Cheap Base USDC x402 ping for agent payment / health checks. Returns pong JSON after payment.",
           price: 0.01,
+          currency: "USD Coin",
+          symbol: "USDC",
           paid: true,
           networks: [DEFAULTS.network],
         },
@@ -224,7 +232,8 @@ export function handleRequest(request, env = {}) {
       pricing: {
         unit: "request",
         amount: 10000,
-        currency: "USDC",
+        currency: "USD Coin",
+        symbol: "USDC",
         network: "base",
         caip2: DEFAULTS.network,
         note: "/ and /health /ping free; /premium returns HTTP 402 (0.01 USDC) with PAYMENT-REQUIRED",
@@ -320,7 +329,7 @@ export function handleRequest(request, env = {}) {
       "X-Payment-Required": "true",
       "X-Payment-Network": DEFAULTS.network,
       "x402-price": "0.01",
-      "x402-asset": "USDC",
+      "x402-asset": "USD Coin",
       "x402-network": DEFAULTS.network,
       "x402-pay-to": treasury,
     });
