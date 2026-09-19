@@ -1,0 +1,9 @@
+{
+  "name": "@filip-study/x402-ping",
+  "version": "1.0.0",
+  "exports": "./src/deno-main.ts",
+  "tasks": {
+    "start": "deno run --allow-net --allow-env src/deno-main.ts",
+    "test": "deno test --allow-net --allow-env test/smoke_test.ts"
+  }
+}

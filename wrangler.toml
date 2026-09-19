@@ -1,0 +1,8 @@
+name = "x402-ping"
+main = "src/cf-worker.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+TREASURY = "0xbAd41cF0f0d5442f9A53630F8081BFd257DA019b"
+TIP_URL = "https://shieldz.cash/tip/tip-d2599a4d16a6f4b0"
+UNLOCK_URL = "https://shieldz.cash/unlock/NDS0MgohhA3PmPaBvmD0"
