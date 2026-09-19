@@ -1,0 +1,57 @@
+{
+  "name": "x402-ping",
+  "url": "https://filip-study.github.io/x402-ping",
+  "version": "1.1.0",
+  "description": "Free tip/unlock discovery plus Base USDC x402-shaped premium paywall stub for agent payment testing.",
+  "defaultInputModes": [
+    "application/json",
+    "text/html"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/html"
+  ],
+  "protocols": [
+    "http",
+    "x402"
+  ],
+  "pricing": {
+    "unit": "request",
+    "amount": 10000,
+    "currency": "USDC",
+    "network": "base",
+    "note": "Static Pages host; Worker redeploy pending CF email verify \u2192 x402-ping.palmbeachpete.workers.dev"
+  },
+  "availability": {
+    "now": true,
+    "window_hours": 168,
+    "sla": "best-effort"
+  },
+  "contact": {
+    "http": "https://filip-study.github.io/x402-ping/",
+    "github": "https://github.com/filip-study/x402-ping",
+    "tip": "https://shieldz.cash/tip/tip-d2599a4d16a6f4b0",
+    "unlock": "https://shieldz.cash/unlock/NDS0MgohhA3PmPaBvmD0",
+    "treasury": "0xbAd41cF0f0d5442f9A53630F8081BFd257DA019b"
+  },
+  "skills": [
+    {
+      "id": "discovery",
+      "name": "Free tip/unlock discovery",
+      "description": "Open index for treasury + tip + unlock links.",
+      "examples": [
+        "Open /"
+      ]
+    },
+    {
+      "id": "premium",
+      "name": "Premium ping (Worker)",
+      "description": "Live 402 on Worker once redeployed.",
+      "examples": [
+        "GET /premium on workers.dev"
+      ]
+    }
+  ],
+  "owner_class": "third-party",
+  "brand": "palm-beach-pete"
+}
