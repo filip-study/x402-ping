@@ -44,7 +44,25 @@ async function run() {
   assert(prem.status === 402, "GET /premium → 402");
   const premBody = await prem.json();
   assert(premBody.error === "payment_required", "402 payment_required");
-  assert(Array.isArray(premBody.accepts) && premBody.accepts[0]?.network === "base", "x402 accepts base");
+  assert(
+    Array.isArray(premBody.accepts) && premBody.accepts[0]?.network === "eip155:8453",
+    "x402 accepts eip155:8453"
+  );
+  const pr = prem.headers.get("PAYMENT-REQUIRED");
+  assert(pr && pr.length > 20, "PAYMENT-REQUIRED header present");
+  const decoded = JSON.parse(Buffer.from(pr, "base64").toString("utf8"));
+  assert(decoded.x402Version === 2, "PAYMENT-REQUIRED x402Version 2");
+  assert(decoded.accepts?.[0]?.network === "eip155:8453", "PAYMENT-REQUIRED network");
+  assert(
+    decoded.accepts?.[0]?.payTo === "0xbAd41cF0f0d5442f9A53630F8081BFd257DA019b",
+    "PAYMENT-REQUIRED payTo treasury"
+  );
+
+  const wk = await handleRequest(new Request("http://local/.well-known/x402"));
+  assert(wk.status === 200, "GET /.well-known/x402 → 200");
+  const wkBody = await wk.json();
+  assert(Array.isArray(wkBody.networks) && wkBody.networks[0] === "eip155:8453", "manifest networks");
+  assert(wkBody.tools?.[0]?.price === 0.01, "manifest tool price");
 
   const payload = tipUnlockPayload({});
   assert(payload.mode === "free-discovery", "tipUnlockPayload mode");
