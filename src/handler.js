@@ -3,7 +3,7 @@
  * Compatible with Cloudflare Workers, Deno Deploy, and local Deno/Node.
  */
 
-export const VERSION = "1.3.3";
+export const VERSION = "1.3.4";
 
 export const DEFAULTS = {
   treasury: "0xbAd41cF0f0d5442f9A53630F8081BFd257DA019b",
@@ -14,7 +14,7 @@ export const DEFAULTS = {
   assetName: "USD Coin", // EIP-712 domain name (Base USDC)
   network: "eip155:8453",
   usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-  amount: "10000", // 0.01 USDC (6 decimals)
+  amount: "50000", // 0.05 USDC (6 decimals) — above Agent402 $0.001 price floor
 };
 
 function corsHeaders() {
@@ -59,7 +59,7 @@ function paymentRequirements(origin, treasury, tip, unlock) {
     resource: {
       url: resourceUrl,
       description:
-        "x402-ping premium ping — 0.01 USDC on Base to treasury. Returns a signed pong JSON.",
+        "x402-ping premium ping — 0.05 USDC on Base to treasury. Returns a signed pong JSON.",
       mimeType: "application/json",
       serviceName: "x402-ping",
       tags: ["x402", "ping", "base", "usdc", "health"],
@@ -94,7 +94,7 @@ export function tipUnlockPayload(env = {}) {
     version: VERSION,
     mode: "free-discovery",
     message:
-      "Free GET. Tip or unlock below. Paid /premium requires 0.01 USDC on Base via x402.",
+      "Free GET. Tip or unlock below. Paid /premium requires 0.05 USDC on Base via x402.",
     treasury,
     chain: DEFAULTS.chain,
     asset: DEFAULTS.asset,
@@ -107,7 +107,7 @@ export function tipUnlockPayload(env = {}) {
       "/": "this discovery JSON (free)",
       "/health": "liveness",
       "/ping": "echo (free)",
-      "/premium": "HTTP 402 + PAYMENT-REQUIRED (0.01 USDC Base)",
+      "/premium": "HTTP 402 + PAYMENT-REQUIRED (0.05 USDC Base)",
       "/.well-known/x402": "Agent402 service manifest",
     },
     x402: {
@@ -231,12 +231,12 @@ export function handleRequest(request, env = {}) {
       protocols: ["http", "x402"],
       pricing: {
         unit: "request",
-        amount: 10000,
+        amount: 50000,
         currency: "USD Coin",
         symbol: "USDC",
         network: "base",
         caip2: DEFAULTS.network,
-        note: "/ and /health /ping free; /premium returns HTTP 402 (0.01 USDC) with PAYMENT-REQUIRED",
+        note: "/ and /health /ping free; /premium returns HTTP 402 (0.05 USDC) with PAYMENT-REQUIRED",
       },
       availability: { now: true, window_hours: 168, sla: "best-effort" },
       contact: {
