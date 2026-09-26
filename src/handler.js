@@ -3,7 +3,7 @@
  * Compatible with Cloudflare Workers, Deno Deploy, and local Deno/Node.
  */
 
-export const VERSION = "1.3.4";
+export const VERSION = "1.3.5";
 
 export const DEFAULTS = {
   treasury: "0xbAd41cF0f0d5442f9A53630F8081BFd257DA019b",
@@ -172,8 +172,8 @@ export function handleRequest(request, env = {}) {
           url: premium,
           method: "GET",
           description:
-            "Premium ping — HTTP 402 exact 0.01 USDC on Base (payTo treasury). PAYMENT-REQUIRED header carries live terms.",
-          price: 0.01,
+            "Premium ping — HTTP 402 exact 0.05 USDC on Base (payTo treasury). PAYMENT-REQUIRED header carries live terms.",
+          price: 0.05,
           currency: "USD Coin",
           symbol: "USDC",
           assetName: "USD Coin",
@@ -188,7 +188,7 @@ export function handleRequest(request, env = {}) {
           name: "Premium ping",
           description:
             "Cheap Base USDC x402 ping for agent payment / health checks. Returns pong JSON after payment.",
-          price: 0.01,
+          price: 0.05,
           currency: "USD Coin",
           symbol: "USDC",
           paid: true,
@@ -322,13 +322,13 @@ export function handleRequest(request, env = {}) {
       resource: reqs.resource,
       tip,
       unlock,
-      hint: "Decode the PAYMENT-REQUIRED header (base64 JSON) for live payment terms. Pay 0.01 USDC on Base to payTo, then retry with X-PAYMENT.",
+      hint: "Decode the PAYMENT-REQUIRED header (base64 JSON) for live payment terms. Pay 0.05 USDC on Base to payTo, then retry with X-PAYMENT.",
     };
     return json(body, 402, {
       "PAYMENT-REQUIRED": paymentRequiredB64,
       "X-Payment-Required": "true",
       "X-Payment-Network": DEFAULTS.network,
-      "x402-price": "0.01",
+      "x402-price": "0.05",
       "x402-asset": "USD Coin",
       "x402-network": DEFAULTS.network,
       "x402-pay-to": treasury,
