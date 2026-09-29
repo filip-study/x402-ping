@@ -3,7 +3,10 @@
  * Compatible with Cloudflare Workers, Deno Deploy, and local Deno/Node.
  */
 
-export const VERSION = "1.3.5";
+export const VERSION = "1.3.6";
+
+/** Public origin x402scan registers. Spec servers[].url stays this host. */
+export const PUBLIC_ORIGIN = "https://x402-ping.palmbeachpete.workers.dev";
 
 export const DEFAULTS = {
   treasury: "0xbAd41cF0f0d5442f9A53630F8081BFd257DA019b",
@@ -138,6 +141,155 @@ export function tipUnlockPayload(env = {}) {
   };
 }
 
+/**
+ * OpenAPI 3.1 discovery for x402scan single-endpoint register.
+ * GET /premium is the only paid operation. Free routes have no x-payment-info.
+ */
+export function openApiDocument() {
+  const pongSchema = {
+    type: "object",
+    properties: {
+      ok: { type: "boolean" },
+      pong: { type: "boolean" },
+      paid: { type: "boolean" },
+      version: { type: "string" },
+    },
+    required: ["ok", "pong"],
+  };
+  return {
+    openapi: "3.1.0",
+    info: {
+      title: "x402-ping",
+      version: VERSION,
+      description:
+        "Free tip/unlock discovery plus paid GET /premium (0.05 USDC on Base via x402).",
+      "x-guidance":
+        "The paid x402 resource is GET /premium at https://x402-ping.palmbeachpete.workers.dev/premium. An unpaid GET returns HTTP 402 and a PAYMENT-REQUIRED header for 0.05 USDC on Base (eip155:8453). Pay that challenge, then retry the same GET with an X-PAYMENT or PAYMENT-SIGNATURE header to receive pong JSON. GET /, GET /health, and GET /ping are free and do not require payment. GET /openapi.json is this document.",
+      contact: {
+        email: "palmbeachpete@agentmail.to",
+        url: "https://github.com/filip-study/x402-ping",
+      },
+    },
+    servers: [{ url: PUBLIC_ORIGIN }],
+    paths: {
+      "/premium": {
+        get: {
+          operationId: "premiumPing",
+          summary: "Premium ping (paid x402)",
+          description:
+            "Paid x402 resource. Unpaid requests return HTTP 402 with PAYMENT-REQUIRED for 0.05 USDC on Base. No query or body is required.",
+          tags: ["paid"],
+          security: [{ x402: [] }],
+          "x-payment-info": {
+            price: { mode: "fixed", currency: "USD", amount: "0.05" },
+            protocols: [{ x402: {} }],
+          },
+          parameters: [],
+          requestBody: {
+            required: false,
+            description:
+              "GET /premium takes no JSON body. This empty object schema marks the route invocable for discovery clients.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {},
+                  additionalProperties: false,
+                },
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Paid pong JSON after a payment header is presented.",
+              content: {
+                "application/json": { schema: pongSchema },
+              },
+            },
+            "402": {
+              description: "Payment Required",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      ok: { type: "boolean" },
+                      error: { type: "string" },
+                      x402Version: { type: "integer" },
+                    },
+                    required: ["error"],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      "/": {
+        get: {
+          operationId: "discovery",
+          summary: "Free tip/unlock discovery",
+          description:
+            "Free discovery JSON: treasury, tip, and unlock links. No payment.",
+          tags: ["free"],
+          responses: {
+            "200": {
+              description: "Free discovery JSON",
+              content: {
+                "application/json": {
+                  schema: { type: "object", additionalProperties: true },
+                },
+              },
+            },
+          },
+        },
+      },
+      "/health": {
+        get: {
+          operationId: "health",
+          summary: "Liveness",
+          description: "Free liveness check.",
+          tags: ["free"],
+          responses: {
+            "200": { description: "Liveness JSON" },
+          },
+        },
+      },
+      "/ping": {
+        get: {
+          operationId: "ping",
+          summary: "Free echo",
+          description: "Free echo of query parameters plus tip/unlock links.",
+          tags: ["free"],
+          parameters: [
+            {
+              name: "hello",
+              in: "query",
+              required: false,
+              schema: { type: "string" },
+              description: "Optional echo field. Any query keys are echoed.",
+            },
+          ],
+          responses: {
+            "200": { description: "Pong JSON" },
+          },
+        },
+      },
+    },
+    components: {
+      securitySchemes: {
+        x402: {
+          type: "apiKey",
+          in: "header",
+          name: "X-PAYMENT",
+          description:
+            "x402 payment proof. PAYMENT-SIGNATURE is also accepted. Unpaid GET /premium returns HTTP 402.",
+        },
+      },
+    },
+  };
+}
+
 export function handleRequest(request, env = {}) {
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders() });
@@ -264,6 +416,10 @@ export function handleRequest(request, env = {}) {
       owner_class: "third-party",
       brand: "palm-beach-pete",
     });
+  }
+
+  if (path === "/openapi.json") {
+    return json(openApiDocument());
   }
 
   if (path === "/health") {
