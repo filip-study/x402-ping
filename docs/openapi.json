@@ -1,0 +1,216 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "x402-ping",
+    "version": "1.3.6",
+    "description": "Free tip/unlock discovery plus paid GET /premium (0.05 USDC on Base via x402).",
+    "x-guidance": "The paid x402 resource is GET /premium at https://x402-ping.palmbeachpete.workers.dev/premium. An unpaid GET returns HTTP 402 and a PAYMENT-REQUIRED header for 0.05 USDC on Base (eip155:8453). Pay that challenge, then retry the same GET with an X-PAYMENT or PAYMENT-SIGNATURE header to receive pong JSON. GET /, GET /health, GET /ping, and GET /.well-known/x402 are free (security: []) and must not be probed as paid. GET /openapi.json is this document.",
+    "contact": {
+      "email": "palmbeachpete@agentmail.to",
+      "url": "https://github.com/filip-study/x402-ping"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://x402-ping.palmbeachpete.workers.dev"
+    }
+  ],
+  "paths": {
+    "/premium": {
+      "get": {
+        "operationId": "premiumPing",
+        "summary": "Premium ping (paid x402)",
+        "description": "Paid x402 resource. Unpaid requests return HTTP 402 with PAYMENT-REQUIRED for 0.05 USDC on Base. No query or body is required.",
+        "tags": [
+          "paid"
+        ],
+        "security": [
+          {
+            "x402": []
+          }
+        ],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.050000"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ]
+        },
+        "parameters": [],
+        "requestBody": {
+          "required": false,
+          "description": "GET /premium takes no JSON body. This empty object schema marks the route invocable for discovery clients.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Paid pong JSON after a payment header is presented.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "pong": {
+                      "type": "boolean"
+                    },
+                    "paid": {
+                      "type": "boolean"
+                    },
+                    "version": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "pong"
+                  ]
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment Required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "x402Version": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "operationId": "discovery",
+        "summary": "Free tip/unlock discovery",
+        "description": "Free discovery JSON: treasury, tip, and unlock links. No payment.",
+        "tags": [
+          "free"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Free discovery JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "summary": "Liveness",
+        "description": "Free liveness check.",
+        "tags": [
+          "free"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Liveness JSON"
+          }
+        }
+      }
+    },
+    "/ping": {
+      "get": {
+        "operationId": "ping",
+        "summary": "Free echo",
+        "description": "Free echo of query parameters plus tip/unlock links.",
+        "tags": [
+          "free"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "hello",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional echo field. Any query keys are echoed."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pong JSON"
+          }
+        }
+      }
+    },
+    "/.well-known/x402": {
+      "get": {
+        "operationId": "wellKnownX402",
+        "summary": "Agent402 service manifest",
+        "description": "Free compatibility manifest. The payable resource is GET /premium, listed in this OpenAPI document.",
+        "tags": [
+          "free"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Agent402 service manifest",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "x402": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-PAYMENT",
+        "description": "x402 payment proof. PAYMENT-SIGNATURE is also accepted. Unpaid GET /premium returns HTTP 402."
+      }
+    }
+  }
+}

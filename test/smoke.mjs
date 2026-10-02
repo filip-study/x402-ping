@@ -3,7 +3,7 @@
  * Run: node --experimental-vm-modules test/smoke.mjs
  * Or:  deno run --allow-read test/smoke.mjs  (after dynamic import adapts)
  */
-import { createRequire } from "node:module";
+import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const handlerUrl = pathToFileURL(path.join(__dirname, "../src/handler.js")).href;
 
-const { handleRequest, tipUnlockPayload, VERSION } = await import(handlerUrl);
+const { handleRequest, tipUnlockPayload, openApiDocument, VERSION } = await import(handlerUrl);
 
 function assert(cond, msg) {
   if (!cond) throw new Error("FAIL: " + msg);
@@ -93,6 +93,14 @@ async function run() {
     assert(Array.isArray(op.security) && op.security.length === 0, `${freePath} security []`);
   }
   assert(spec.mode !== "free-discovery", "openapi is not free-discovery payload");
+
+  const pagesSpec = JSON.parse(
+    readFileSync(path.join(__dirname, "../docs/openapi.json"), "utf8")
+  );
+  assert(
+    JSON.stringify(pagesSpec) === JSON.stringify(openApiDocument()),
+    "docs/openapi.json matches openApiDocument()"
+  );
 
   assert(freeBody.mode === "free-discovery", "GET / stays free discovery");
   assert(!freeBody.openapi, "GET / is not an OpenAPI document");

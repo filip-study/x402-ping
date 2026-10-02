@@ -4,7 +4,11 @@
 [![Tip jar](https://img.shields.io/badge/tip-shieldz.cash-purple)](https://shieldz.cash/tip/tip-d2599a4d16a6f4b0)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
-**Tiny free-to-host micro-endpoint** for agents on [Base](https://base.org): a free `GET /` returns tip + unlock JSON today; `/premium` returns an **HTTP 402** stub shaped like [x402](https://www.x402.org/) so you can wire USDC payments later — **$0 capital to ship**.
+**Palm Beach Pete** micro-endpoint for agents on [Base](https://base.org): a free `GET /` returns tip + unlock JSON today; `/premium` returns an **HTTP 402** stub shaped like [x402](https://www.x402.org/) so you can wire USDC payments later — **$0 capital to ship**.
+
+**Primary live Worker:** https://x402-ping.palmbeachpete.workers.dev
+
+That is the host to call and to register. `filip-study.workers.dev` returns HTTP 500 — do not use it.
 
 Sibling of [`base-usdc-tip-kit`](https://github.com/filip-study/base-usdc-tip-kit), [`free-rpc-map`](https://github.com/filip-study/free-rpc-map), [`base-usdc-paylink`](https://github.com/filip-study/base-usdc-paylink).
 
@@ -41,16 +45,41 @@ curl -s http://127.0.0.1:8787/ | jq .
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8787/premium   # 402
 ```
 
+## Live Worker and OpenAPI
+
+| Surface | URL |
+|---------|-----|
+| **Primary live Worker** | https://x402-ping.palmbeachpete.workers.dev |
+| **x402scan OpenAPI** (Worker, after deploy) | https://x402-ping.palmbeachpete.workers.dev/openapi.json |
+| GitHub Pages OpenAPI (static copy) | https://filip-study.github.io/x402-ping/openapi.json |
+| Pages index | https://filip-study.github.io/x402-ping/ |
+
+`docs/openapi.json` is a static copy of `openApiDocument()` (OpenAPI 3.1, server `https://x402-ping.palmbeachpete.workers.dev`, paid `GET /premium` with the `x402` security scheme, free routes `security: []`). GitHub Pages can serve it before the Worker is redeployed.
+
+**x402scan needs the live Worker `/openapi.json` after deploy.** The Worker currently on `palmbeachpete` can still answer `GET /openapi.json` with free-discovery JSON until this workflow (or a local `wrangler deploy`) publishes handler `1.3.6`. Pages is the stand-in document; registration should use the Worker URL once that route returns the OpenAPI document (`openapi: 3.1.0`), not the discovery payload.
+
+The **Metropolis** window through **2026-10-13** is a separate track. It does not gate this Worker deploy or the x402scan registration above.
+
 ## Deploy (free tiers — your account)
 
-No Cloudflare / Deno Deploy login is baked into this repo. After you create a free account:
+No Cloudflare / Deno Deploy token is committed in this repo.
 
-### Cloudflare Workers
+### Cloudflare Workers (GitHub Actions)
+
+[`.github/workflows/deploy-worker.yml`](./.github/workflows/deploy-worker.yml) runs `npx wrangler deploy` on every push to `main` and on `workflow_dispatch`.
+
+The token must belong to the Palm Beach Pete Cloudflare account that serves `x402-ping.palmbeachpete.workers.dev`. Add secrets under **Settings → Secrets and variables → Actions**. Do not commit them.
+
+| Secret | Required | Notes |
+|--------|----------|---|
+| `CLOUDFLARE_API_TOKEN` | **yes** | API token with Workers Scripts:Edit and Account:Read. If this secret is missing or empty, the workflow **fails immediately** and does not deploy. |
+| `CLOUDFLARE_ACCOUNT_ID` | no | Set when the token can see more than one account. When unset, it is not passed to Wrangler. |
+
+Local deploy still works when Wrangler can start:
 
 ```bash
-npm i -g wrangler   # or use npx
-wrangler login
-wrangler deploy
+npx wrangler login
+npx wrangler deploy
 ```
 
 Uses `wrangler.toml` + `src/cf-worker.js`. Free tier is enough for discovery traffic.
@@ -94,12 +123,15 @@ This repo intentionally ships the **shape + free discovery** first so agents can
 ## Layout
 
 ```
-src/handler.js      shared request logic
-src/cf-worker.js    Cloudflare Workers entry
-src/deno-main.ts    Deno Deploy / local Deno
-test/smoke.mjs      local smoke (Node)
-wrangler.toml       CF config + default tip/unlock vars
-deno.json           Deno tasks
+src/handler.js                      shared request logic (openApiDocument)
+src/cf-worker.js                    Cloudflare Workers entry
+src/deno-main.ts                    Deno Deploy / local Deno
+docs/openapi.json                   static copy of openApiDocument() for Pages
+docs/index.html                     Pages index (Worker URL, OpenAPI, agent card, tip/unlock)
+.github/workflows/deploy-worker.yml push-to-main Wrangler deploy
+test/smoke.mjs                      local smoke (Node)
+wrangler.toml                       CF config + default tip/unlock vars
+deno.json                           Deno tasks
 ```
 
 ## License
