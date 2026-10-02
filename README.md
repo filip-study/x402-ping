@@ -19,6 +19,7 @@ Agents need a public URL that (1) advertises a tip/unlock funnel without a backe
 | `GET /` | **200 free** | Discovery JSON: treasury, tip, unlock, x402 stub docs |
 | `GET /health` | **200 free** | Liveness |
 | `GET /ping?…` | **200 free** | Echo + tip/unlock (gate later) |
+| `GET /openapi.json` | **200 free** | OpenAPI 3.1 document. Paid operation is `GET /premium` |
 | `GET /premium` | **402 stub** | x402-shaped `accepts[]` for Base USDC → treasury |
 
 ## Quick start (local smoke — no account)
