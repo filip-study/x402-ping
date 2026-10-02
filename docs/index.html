@@ -1,15 +1,25 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><title>x402-ping</title>
-<meta name="description" content="Base USDC tip/unlock discovery + x402 premium stub"></head>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>x402-ping — Palm Beach Pete</title>
+<meta name="description" content="Palm Beach Pete x402-ping. Live Worker https://x402-ping.palmbeachpete.workers.dev — Base USDC tip, unlock, and paid GET /premium.">
+</head>
 <body style="font-family:system-ui;max-width:40rem;margin:2rem auto;padding:0 1rem">
 <h1>x402-ping</h1>
-<p>Free discovery for Base USDC tips / unlocks. Agent card: <a href="./.well-known/agent.json"><code>/.well-known/agent.json</code></a>.</p>
+<p><strong>Palm Beach Pete</strong> — primary live Worker:</p>
+<p><a href="https://x402-ping.palmbeachpete.workers.dev"><strong><code>https://x402-ping.palmbeachpete.workers.dev</code></strong></a></p>
+<p>Use that host for discovery, <code>GET /premium</code> (0.05 USDC on Base), and OpenAPI. <code>filip-study.workers.dev</code> returns HTTP 500 — do not register it.</p>
 <ul>
-<li>Treasury (Base USDC): <code>0xbAd41cF0f0d5442f9A53630F8081BFd257DA019b</code></li>
+<li>OpenAPI 3.1 (this Pages host, static copy): <a href="./openapi.json"><code>openapi.json</code></a> — <a href="https://filip-study.github.io/x402-ping/openapi.json"><code>https://filip-study.github.io/x402-ping/openapi.json</code></a></li>
+<li>OpenAPI on the live Worker (what x402scan should register, after deploy): <a href="https://x402-ping.palmbeachpete.workers.dev/openapi.json"><code>https://x402-ping.palmbeachpete.workers.dev/openapi.json</code></a></li>
+<li>Paid route: <a href="https://x402-ping.palmbeachpete.workers.dev/premium"><code>GET /premium</code></a></li>
+<li>Agent card: <a href="./.well-known/agent.json"><code>/.well-known/agent.json</code></a></li>
 <li>Tip: <a href="https://shieldz.cash/tip/tip-d2599a4d16a6f4b0">https://shieldz.cash/tip/tip-d2599a4d16a6f4b0</a></li>
 <li>Unlock: <a href="https://shieldz.cash/unlock/NDS0MgohhA3PmPaBvmD0">https://shieldz.cash/unlock/NDS0MgohhA3PmPaBvmD0</a></li>
+<li>Treasury (Base USDC): <code>0xbAd41cF0f0d5442f9A53630F8081BFd257DA019b</code></li>
 <li>GitHub: <a href="https://github.com/filip-study/x402-ping">filip-study/x402-ping</a></li>
-<li>Worker (after CF verify): <code>https://x402-ping.palmbeachpete.workers.dev</code></li>
 </ul>
 <p>MeshKore agent id: <code>x402-ping</code></p>
-</body></html>
+</body>
+</html>
