@@ -68,21 +68,30 @@ async function run() {
   assert(specRes.status === 200, "GET /openapi.json → 200");
   assert(specRes.headers.get("X-x402-ping") === VERSION, "x-x402-ping version header");
   const spec = await specRes.json();
-  assert(spec.openapi?.startsWith("3."), "openapi 3.x");
+  assert(spec.openapi === "3.1.0", "openapi 3.1.0");
   assert(spec.info?.title === "x402-ping", "openapi title");
   assert(spec.info?.version === VERSION, "openapi info.version");
+  assert(typeof spec.info?.["x-guidance"] === "string", "openapi x-guidance");
+  assert(spec.info?.contact?.email === "palmbeachpete@agentmail.to", "openapi contact email");
   assert(
     spec.servers?.[0]?.url === "https://x402-ping.palmbeachpete.workers.dev",
     "openapi servers url"
   );
   const premiumOp = spec.paths?.["/premium"]?.get;
   assert(premiumOp, "paths./premium GET");
-  assert(premiumOp["x-payment-info"]?.price?.amount === "0.05", "openapi premium price 0.05");
-  assert(premiumOp["x-payment-info"]?.price?.mode === "fixed", "openapi premium fixed price");
+  const pay = premiumOp["x-payment-info"];
+  assert(pay?.price?.mode === "fixed", "openapi premium fixed price");
+  assert(pay?.price?.currency === "USD", "openapi premium currency USD");
+  assert(pay?.price?.amount === "0.050000", "openapi premium amount 0.050000");
+  assert(pay?.protocols?.[0]?.x402 && typeof pay.protocols[0].x402 === "object", "openapi x402 protocol");
+  assert(premiumOp.responses?.["200"]?.content?.["application/json"]?.schema, "openapi premium 200 schema");
   assert(premiumOp.responses?.["402"], "openapi premium 402 response");
-  assert(spec.paths?.["/"]?.get && !spec.paths["/"]?.get["x-payment-info"], "GET / free in spec");
-  assert(spec.paths?.["/health"]?.get, "paths./health");
-  assert(spec.paths?.["/ping"]?.get, "paths./ping");
+  assert(premiumOp.requestBody?.content?.["application/json"]?.schema, "openapi premium input schema");
+  for (const freePath of ["/", "/health", "/ping", "/.well-known/x402"]) {
+    const op = spec.paths?.[freePath]?.get;
+    assert(op && !op["x-payment-info"], `${freePath} free in spec`);
+    assert(Array.isArray(op.security) && op.security.length === 0, `${freePath} security []`);
+  }
   assert(spec.mode !== "free-discovery", "openapi is not free-discovery payload");
 
   assert(freeBody.mode === "free-discovery", "GET / stays free discovery");
