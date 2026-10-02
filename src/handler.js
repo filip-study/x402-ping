@@ -143,7 +143,7 @@ export function tipUnlockPayload(env = {}) {
 
 /**
  * OpenAPI 3.1 discovery for x402scan single-endpoint register.
- * GET /premium is the only paid operation. Free routes have no x-payment-info.
+ * GET /premium is the only paid operation. Free routes set security: [] so scanners skip them.
  */
 export function openApiDocument() {
   const pongSchema = {
@@ -164,7 +164,7 @@ export function openApiDocument() {
       description:
         "Free tip/unlock discovery plus paid GET /premium (0.05 USDC on Base via x402).",
       "x-guidance":
-        "The paid x402 resource is GET /premium at https://x402-ping.palmbeachpete.workers.dev/premium. An unpaid GET returns HTTP 402 and a PAYMENT-REQUIRED header for 0.05 USDC on Base (eip155:8453). Pay that challenge, then retry the same GET with an X-PAYMENT or PAYMENT-SIGNATURE header to receive pong JSON. GET /, GET /health, and GET /ping are free and do not require payment. GET /openapi.json is this document.",
+        "The paid x402 resource is GET /premium at https://x402-ping.palmbeachpete.workers.dev/premium. An unpaid GET returns HTTP 402 and a PAYMENT-REQUIRED header for 0.05 USDC on Base (eip155:8453). Pay that challenge, then retry the same GET with an X-PAYMENT or PAYMENT-SIGNATURE header to receive pong JSON. GET /, GET /health, GET /ping, and GET /.well-known/x402 are free (security: []) and must not be probed as paid. GET /openapi.json is this document.",
       contact: {
         email: "palmbeachpete@agentmail.to",
         url: "https://github.com/filip-study/x402-ping",
@@ -181,7 +181,7 @@ export function openApiDocument() {
           tags: ["paid"],
           security: [{ x402: [] }],
           "x-payment-info": {
-            price: { mode: "fixed", currency: "USD", amount: "0.05" },
+            price: { mode: "fixed", currency: "USD", amount: "0.050000" },
             protocols: [{ x402: {} }],
           },
           parameters: [],
@@ -232,6 +232,7 @@ export function openApiDocument() {
           description:
             "Free discovery JSON: treasury, tip, and unlock links. No payment.",
           tags: ["free"],
+          security: [],
           responses: {
             "200": {
               description: "Free discovery JSON",
@@ -250,6 +251,7 @@ export function openApiDocument() {
           summary: "Liveness",
           description: "Free liveness check.",
           tags: ["free"],
+          security: [],
           responses: {
             "200": { description: "Liveness JSON" },
           },
@@ -261,6 +263,7 @@ export function openApiDocument() {
           summary: "Free echo",
           description: "Free echo of query parameters plus tip/unlock links.",
           tags: ["free"],
+          security: [],
           parameters: [
             {
               name: "hello",
@@ -272,6 +275,26 @@ export function openApiDocument() {
           ],
           responses: {
             "200": { description: "Pong JSON" },
+          },
+        },
+      },
+      "/.well-known/x402": {
+        get: {
+          operationId: "wellKnownX402",
+          summary: "Agent402 service manifest",
+          description:
+            "Free compatibility manifest. The payable resource is GET /premium, listed in this OpenAPI document.",
+          tags: ["free"],
+          security: [],
+          responses: {
+            "200": {
+              description: "Agent402 service manifest",
+              content: {
+                "application/json": {
+                  schema: { type: "object", additionalProperties: true },
+                },
+              },
+            },
           },
         },
       },
